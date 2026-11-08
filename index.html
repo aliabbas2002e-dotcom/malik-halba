@@ -5,90 +5,139 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>ملك الحلبة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&family=Reem+Kufi:wght@700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#14121c;--panel:#201d2c;--line:#37324a;--txt:#f3f0fa;--mut:#a59fbb;--gold:#f4b73e;--t0:#8b7cf6;--t1:#2fc79c;--t2:#f0784a}
+:root{--bg:#0d0b16;--panel:rgba(20,16,32,.76);--line:rgba(244,183,62,.28);--txt:#f6f1e6;--mut:#b9b0c9;--gold:#f4b73e;--gold2:#ffe2a0;--t0:#8b7cf6;--t1:#2fc79c;--t2:#f0784a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Cairo,system-ui,sans-serif;overscroll-behavior:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Cairo,system-ui,sans-serif;overscroll-behavior:none;overflow:hidden}
 button,input{font:inherit;color:inherit}
-.screen{display:none;min-height:100%;padding:24px 16px;align-items:center;justify-content:center}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0;touch-action:none}
+body::after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 52%,rgba(5,3,14,.62) 100%)}
+.screen{display:none;position:fixed;inset:0;z-index:3;overflow:auto;padding:24px 16px;align-items:center;justify-content:flex-start}
 .screen.on{display:flex}
-.card{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
-h1{font-size:44px;font-weight:900;margin:0;color:var(--gold);text-align:center;line-height:1.2}
-.sub{color:var(--mut);text-align:center;margin:4px 0 20px}
-label{display:block;color:var(--mut);font-size:14px;margin:12px 0 6px}
-input{width:100%;height:48px;padding:0 14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;font-size:18px;outline:none}
-input:focus{border-color:var(--gold)}
-.btn{width:100%;height:50px;border:1px solid var(--line);background:#2b2740;border-radius:10px;font-weight:700;font-size:17px;cursor:pointer}
-.btn.pri{background:var(--gold);border-color:var(--gold);color:#2a1d04}
-.btn:disabled{opacity:.45;cursor:default}
+.card{position:relative;width:100%;max-width:460px;margin:auto 0;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:18px;padding:30px 28px;box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,235,190,.12)}
+@media(min-width:861px){.screen{padding-inline-start:7vw}}
+@media(max-width:860px){.screen{justify-content:center}.card{margin:auto}}
+.card::before,.card::after{content:"";position:absolute;width:26px;height:26px;border:2px solid var(--gold);opacity:.75}
+.card::before{top:9px;right:9px;border-left:0;border-bottom:0;border-top-right-radius:9px}
+.card::after{bottom:9px;left:9px;border-right:0;border-top:0;border-bottom-left-radius:9px}
+.crest{display:block;text-align:center;font-size:46px;line-height:1;color:var(--gold);text-shadow:0 0 26px rgba(244,183,62,.7)}
+h1{font-family:'Reem Kufi',Cairo,sans-serif;font-size:clamp(44px,7vw,60px);font-weight:700;margin:4px 0 0;text-align:center;line-height:1.2;background:linear-gradient(180deg,#fff0c4,#f4b73e 55%,#b87616);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);text-align:center;margin:6px 0 20px;font-size:15px}
+label{display:block;color:var(--mut);font-size:14px;margin:14px 0 6px}
+input{width:100%;height:50px;padding:0 16px;background:rgba(8,6,16,.7);border:1px solid rgba(255,255,255,.14);border-radius:11px;font-size:18px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(244,183,62,.2)}
+.btn{width:100%;height:52px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);border-radius:11px;font-weight:700;font-size:17px;cursor:pointer;transition:transform .12s,filter .12s,background .12s}
+.btn:hover{background:rgba(255,255,255,.13);transform:translateY(-1px)}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:linear-gradient(180deg,#ffd877,#e79f22);border-color:#ffe6a8;color:#2a1a02;font-weight:900;box-shadow:0 8px 24px rgba(231,159,34,.35),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn.pri:hover{filter:brightness(1.08);background:linear-gradient(180deg,#ffd877,#e79f22)}
+.btn:disabled{opacity:.42;cursor:default;transform:none;box-shadow:none}
 .row{display:flex;gap:10px;margin-top:12px}
-.err{color:#ff8d8d;min-height:24px;margin-top:10px;text-align:center;font-size:15px}
-.code{font-size:40px;font-weight:900;letter-spacing:8px;text-align:center;color:var(--gold);direction:ltr}
-.team{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px}
-.team h3{margin:0 0 8px;font-size:16px}
-.slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.slot{min-height:58px;border:1px dashed var(--line);border-radius:9px;background:var(--bg);padding:6px;cursor:pointer;text-align:center;font-size:15px}
-.slot small{display:block;color:var(--mut);font-size:12px}
-.slot.me{border:2px solid var(--gold)}
-#game{display:none;position:fixed;inset:0;background:#0d0b13;touch-action:none;user-select:none;-webkit-user-select:none}
+.or{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:13px;margin:18px 0 0}.or::before,.or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.13)}
+.err{color:#ff9f9f;min-height:24px;margin-top:10px;text-align:center;font-size:15px}
+#lobby .card{max-width:640px}
+.lhead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.lhead small{display:block;color:var(--mut);font-size:13px}
+.code{font-size:38px;font-weight:900;letter-spacing:7px;color:var(--gold2);direction:ltr;line-height:1.15;font-family:Cairo}
+#copy{width:auto;padding:0 18px;height:44px;font-size:15px}
+#teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:16px}
+.team{border-radius:13px;overflow:hidden;background:rgba(6,4,14,.55);border:1px solid color-mix(in srgb,var(--tc) 55%,transparent)}
+.team h3{margin:0;padding:7px 12px;font-size:15px;font-weight:900;background:color-mix(in srgb,var(--tc) 30%,transparent);color:#fff;text-align:center}
+.slots{display:grid;gap:7px;padding:9px}
+.slot{display:flex;align-items:center;gap:10px;min-height:58px;border:1px dashed rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.03);padding:6px 9px;cursor:pointer;text-align:start;transition:background .12s,border-color .12s}
+.slot:hover{background:rgba(255,255,255,.09)}
+.slot.full{border-style:solid;border-color:color-mix(in srgb,var(--tc) 60%,transparent)}
+.slot.me{border:2px solid var(--gold);background:rgba(244,183,62,.11)}
+.slot .ic{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:18px;background:color-mix(in srgb,var(--tc) 38%,#14101f);color:#fff}
+.slot b{display:block;font-size:15px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.slot small{display:block;color:var(--mut);font-size:12px;line-height:1.25}
+.slot .tx{min-width:0}
+#game{display:none;position:fixed;inset:0;z-index:2;pointer-events:none;user-select:none;-webkit-user-select:none}
 #game.on{display:block}
-canvas{position:absolute;inset:0;width:100%;height:100%}
-#hud{position:absolute;top:env(safe-area-inset-top,0);left:0;right:0;display:flex;gap:6px;padding:6px;justify-content:center;pointer-events:none}
-.ht{background:#201d2ce0;border:1px solid var(--line);border-radius:9px;padding:2px 10px;font-size:13px;font-weight:700;white-space:nowrap}
-#banner{position:absolute;top:18%;left:0;right:0;text-align:center;font-size:clamp(28px,7vw,56px);font-weight:900;pointer-events:none;color:#fff;text-shadow:0 3px 0 #0008}
-#feed{position:absolute;top:52px;left:8px;font-size:13px;pointer-events:none;direction:rtl}
-#feed div{background:#0009;border-radius:6px;padding:1px 8px;margin-bottom:3px}
-#labels{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#game::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;box-shadow:inset 0 0 130px 30px rgba(220,30,30,.65)}
+#game.low::after{opacity:.65}#game.out::after{opacity:1;animation:pulse .7s infinite alternate}
+@keyframes pulse{from{opacity:.45}to{opacity:1}}
+#hud{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:0;right:0;display:flex;gap:8px;padding:0 10px;justify-content:center;align-items:flex-start}
+.tp{width:172px;background:var(--panel);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);border:1px solid color-mix(in srgb,var(--tc) 60%,transparent);border-top:3px solid var(--tc);border-radius:0 0 11px 11px;padding:5px 9px 7px}
+.tpt{display:flex;justify-content:space-between;align-items:center;font-size:13px}.tpt b{font-weight:900;color:var(--tc)}
+.crs i{font-style:normal;color:rgba(255,255,255,.18);font-size:14px;margin-inline-start:1px}.crs i.on{color:var(--gold);text-shadow:0 0 9px rgba(244,183,62,.85)}
+.pip{display:flex;align-items:center;gap:6px;margin-top:3px}
+.pip em{font-style:normal;font-size:11px;width:54px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}.pip.k em{color:var(--gold2);font-weight:700}
+.pip i{flex:1;height:6px;background:#0008;border-radius:3px;overflow:hidden}.pip u{display:block;height:100%;background:var(--tc);text-decoration:none;transition:width .12s}
+.pip.dead{opacity:.32}
+.clock{min-width:96px;text-align:center;background:var(--panel);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:0 0 11px 11px;padding:4px 12px 6px}
+.clock small{display:block;color:var(--mut);font-size:11px;line-height:1.3}.clock b{display:block;font-size:19px;font-weight:900;line-height:1.2;white-space:nowrap}
+#banner{position:absolute;top:24%;left:0;right:0;text-align:center;font-family:'Reem Kufi',Cairo,sans-serif;font-size:clamp(34px,8vw,84px);font-weight:700;background:linear-gradient(180deg,#fff4d0,#f4b73e);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 12px rgba(0,0,0,.75))}
+#banner.pop{animation:pop .42s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(1.9);opacity:0}to{transform:scale(1);opacity:1}}
+#feed{position:absolute;top:118px;left:12px;font-size:13px;font-weight:700}
+#feed div{background:var(--panel);border-inline-end:3px solid var(--gold);border-radius:6px;padding:3px 10px;margin-bottom:4px;animation:slide .22s ease-out}
+@keyframes slide{from{transform:translateX(-24px);opacity:0}to{transform:none;opacity:1}}
+#labels{position:absolute;inset:0;overflow:hidden}
 .lb{position:absolute;left:0;top:0;text-align:center;white-space:nowrap;font-size:13px;will-change:transform}
 .lb b{display:block;font-weight:900;text-shadow:0 1px 3px #000,0 0 2px #000}
-.lb i{display:block;width:58px;height:7px;margin:1px auto 0;background:#000a;border-radius:4px;overflow:hidden;border:1px solid #0008}
+.lb i{display:block;width:62px;height:7px;margin:1px auto 0;background:#000a;border-radius:4px;overflow:hidden;border:1px solid #0008}
 .lb u{display:block;height:100%;text-decoration:none}
-.dmg{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:22px;color:#fff;text-shadow:0 2px 4px #000;animation:up .7s ease-out forwards}
-.dmg.big{font-size:34px;color:#ffa45a}
-@keyframes up{to{margin-top:-58px;opacity:0}}
-#help{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:var(--mut);font-size:13px;pointer-events:none}
-#over{position:absolute;inset:0;display:none;background:#0d0b13e8;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.dmg{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:24px;color:#fff;text-shadow:0 2px 5px #000;animation:up .7s ease-out forwards}
+.dmg.big{font-size:38px;color:#ffa45a}
+@keyframes up{to{margin-top:-64px;opacity:0}}
+#xh{position:absolute;left:50%;top:50%;width:26px;height:26px;transform:translate(-50%,-50%)}
+#xh::before,#xh::after{content:"";position:absolute;background:rgba(255,255,255,.85);box-shadow:0 0 3px #000}
+#xh::before{left:12px;top:0;width:2px;height:26px;clip-path:polygon(0 0,100% 0,100% 36%,0 36%,0 64%,100% 64%,100% 100%,0 100%)}
+#xh::after{top:12px;left:0;height:2px;width:26px;clip-path:polygon(0 0,36% 0,36% 100%,64% 100%,64% 0,100% 0,100% 100%,0 100%)}
+#me{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);left:50%;transform:translateX(-50%);width:min(340px,38vw);min-width:190px;background:var(--panel);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);border:1px solid var(--line);border-radius:12px;padding:7px 12px 9px}
+.mt{display:flex;justify-content:space-between;font-size:13px;font-weight:700}.mt span:first-child{color:var(--gold2)}
+.mhp{position:relative;height:15px;background:#0009;border-radius:7px;overflow:hidden;margin-top:3px}.mhp u{display:block;height:100%;text-decoration:none;transition:width .1s}
+.mhp b{position:absolute;inset:0;text-align:center;font-size:11px;line-height:15px;text-shadow:0 1px 2px #000}
+.mds{height:4px;background:#0009;border-radius:2px;overflow:hidden;margin-top:4px}.mds u{display:block;height:100%;background:#7fc4ff;text-decoration:none}
+#dead{position:absolute;top:44%;left:0;right:0;text-align:center;font-size:clamp(22px,4vw,36px);font-weight:900;text-shadow:0 2px 8px #000}
+#lock{position:absolute;top:58%;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:30px;padding:7px 22px;font-weight:700}
+#help{position:absolute;bottom:92px;left:0;right:0;text-align:center;color:var(--txt);font-size:13px;text-shadow:0 1px 3px #000;transition:opacity .4s}
+#over{position:absolute;inset:0;display:none;background:rgba(6,4,14,.62);align-items:center;justify-content:center;padding:16px;overflow:auto;pointer-events:auto;z-index:5}
 #over.on{display:flex}
-#stats{margin:12px 0;font-size:15px;line-height:1.9}
-#rot{display:none;position:absolute;inset:0;background:#14121c;z-index:9;align-items:center;justify-content:center;text-align:center;font-size:24px;font-weight:900;padding:24px;color:var(--gold)}
+#stats{margin:14px 0 18px}
+.sr{display:flex;justify-content:space-between;padding:6px 12px;border-radius:8px;font-size:15px;font-weight:700}.sr:nth-child(odd){background:rgba(255,255,255,.05)}.sr.mvp{background:rgba(244,183,62,.17);color:var(--gold2)}
+.rv{text-align:center;color:var(--mut);margin-top:10px;font-size:14px}
+#rot{display:none;position:absolute;inset:0;background:#0d0b16;z-index:9;align-items:center;justify-content:center;text-align:center;font-size:24px;font-weight:900;padding:24px;color:var(--gold);pointer-events:auto}
 @media (orientation:portrait){.touch #rot{display:flex}}
-@media (max-height:480px){.touch #hud{padding:3px}.touch .ht{font-size:11px;padding:0 7px}.touch #feed{top:32px;font-size:11px}.lb{font-size:11px}.lb i{width:44px;height:5px}.dmg{font-size:17px}.dmg.big{font-size:26px}}
 #touch{display:none}
-.touch #touch{display:block}.touch #help{display:none}
-#stick{position:absolute;left:24px;bottom:28px;width:130px;height:130px;border-radius:50%;border:2px solid #fff4;background:#fff1}
-#knob{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:#fff6}
-.tb{position:absolute;border-radius:50%;border:2px solid #fff5;background:#fff2;font-weight:900;display:flex;align-items:center;justify-content:center}
-#bA{right:24px;bottom:30px;width:88px;height:88px;background:#f4b73e66}
+.touch #touch{display:block}.touch #help,.touch #xh{display:none!important}
+#stick{position:absolute;left:24px;bottom:28px;width:130px;height:130px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(20,16,32,.35);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.55)}
+.tb{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(20,16,32,.5);font-weight:900;display:flex;align-items:center;justify-content:center;pointer-events:auto;touch-action:none}
+#bA{right:24px;bottom:30px;width:88px;height:88px;background:rgba(244,183,62,.5);border-color:var(--gold)}
 #bB{right:124px;bottom:22px;width:64px;height:64px}
 #bD{right:40px;bottom:130px;width:64px;height:64px}
+@media (max-height:480px){.tp{width:128px;padding:3px 7px 4px}.tpt{font-size:11px}.pip em{width:40px;font-size:10px}.pip{margin-top:1px}.clock{min-width:70px;padding:2px 8px}.clock b{font-size:14px}.clock small{font-size:10px}#hud{top:4px;gap:5px}#feed{top:80px;font-size:11px}.lb{font-size:11px}.lb i{width:46px;height:5px}.dmg{font-size:18px}.dmg.big{font-size:28px}#me{bottom:8px;min-width:170px;width:28vw;padding:4px 9px 6px}.mt{font-size:11px}.mhp{height:12px}.mhp b{line-height:12px;font-size:10px}.card{padding:18px}.crest{font-size:30px}h1{font-size:34px}}
 </style>
 </head>
 <body>
+<canvas id="c"></canvas>
 <section id="home" class="screen on"><div class="card">
+  <span class="crest" aria-hidden="true">♛</span>
   <h1>ملك الحلبة</h1><p class="sub">٣ فرق، بكل فريق ملك ومقاتل. احمِ ملكك واقتل ملوكهم</p>
   <label for="nm">اسمك</label><input id="nm" maxlength="12" placeholder="علي" autocomplete="off">
   <div class="row"><button id="create" class="btn pri">سوّي غرفة</button></div>
-  <label for="cd">عندك كود غرفة؟</label>
-  <div class="row" style="margin-top:0"><input id="cd" maxlength="4" placeholder="ABCD" style="direction:ltr;text-align:center;text-transform:uppercase" autocomplete="off"><button id="join" class="btn" style="width:130px">ادخل</button></div>
+  <div class="or">أو ادخل بكود</div>
+  <div class="row"><input id="cd" maxlength="4" placeholder="ABCD" style="direction:ltr;text-align:center;text-transform:uppercase;letter-spacing:4px" autocomplete="off"><button id="join" class="btn" style="width:130px;flex:none">ادخل</button></div>
   <div id="err" class="err"></div>
 </div></section>
 
 <section id="lobby" class="screen"><div class="card">
-  <p class="sub" style="margin:0">كود الغرفة</p><div id="lcode" class="code"></div>
-  <button id="copy" class="btn">انسخ رابط الدعوة</button>
+  <div class="lhead"><div><small>كود الغرفة</small><div id="lcode" class="code"></div></div><button id="copy" class="btn">انسخ رابط الدعوة</button></div>
   <div id="teams"></div>
   <div class="row"><button id="start" class="btn pri">ابدي العركة</button></div>
   <div id="lmsg" class="err"></div>
 </div></section>
 
 <div id="game">
-  <canvas id="c"></canvas>
   <div id="labels"></div><div id="hud"></div><div id="feed"></div><div id="banner"></div>
-  <div id="help">حركة WASD · ماوس للتصويب · كليك ضربة · اضغط مطول ضربة قوية · Shift صد · Space تفادي</div>
+  <div id="xh"></div><div id="dead"></div><div id="lock">كليك حتى تتحكم بالنظر</div>
+  <div id="help">ماوس للنظر · WASD حركة · كليك ضربة · اضغط مطول ضربة قوية · Shift أو كليك يمين صد · Space تفادي</div>
+  <div id="me"><div class="mt"><span id="mRole"></span><span id="mWp"></span></div><div class="mhp"><u id="mFill"></u><b id="mHp"></b></div><div class="mds"><u id="mDash"></u></div></div>
   <div id="touch"><div id="stick"><div id="knob"></div></div><div id="bA" class="tb">ضربة</div><div id="bB" class="tb">صد</div><div id="bD" class="tb">تفادي</div></div>
   <div id="rot">دوّر الموبايل بالعرض حتى تلعب</div>
-  <div id="over"><div class="card"><h1 id="otitle"></h1><div id="stats"></div><button id="again" class="btn pri">رجوع للغرفة</button></div></div>
+  <div id="over"><div class="card"><span class="crest" aria-hidden="true">♛</span><h1 id="otitle"></h1><div id="stats"></div><button id="again" class="btn pri">رجوع للغرفة</button></div></div>
 </div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
@@ -98,10 +147,10 @@ const SB_URL='https://xrxkyposmjwtqvwlmiem.supabase.co',SB_KEY='sb_publishable_T
 const sb=supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:40}}});
 const $=i=>document.getElementById(i);
 const TN=['البنفسجي','الأخضر','البرتقالي'],TC=['#8b7cf6','#2fc79c','#f0784a'],RN=['الملك','المقاتل'];
-const W=960,H=620,PR=19,CX=480,CY=290,TX=480,TY=277;
-const WALLS=[[285,105,135,27],[540,105,135,27],[262,330,27,120],[671,330,27,120]];
-const BASES=[[33,30,195,165],[732,30,195,165],[382,393,195,144]];
-const SPAWN=[[[98,128],[173,128]],[[862,128],[787,128]],[[517,487],[442,487]]];
+const W=1360,H=880,PR=19,CX=680,CY=412,TX=680,TY=393;
+const WALLS=[[404,155,191,27],[765,155,191,27],[376,468,27,170],[957,468,27,170]];
+const BASES=[[40,36,240,195],[1080,36,240,195],[560,600,240,180]];
+const SPAWN=[[[115,133],[205,133]],[[1245,133],[1155,133]],[[725,690],[635,690]]];
 const WP=[{n:'إيد',d:12,r:60,arc:1.5,cd:.36},{n:'سيف',d:20,r:88,arc:1.8,cd:.46},{n:'رمح',d:17,r:135,arc:.55,cd:.55},{n:'قوس',d:15,cd:.7,bow:1},{n:'مطرقة العرش',d:38,r:105,arc:2.4,cd:.85}];
 const STAT=[{hp:170,sp:178,m:1},{hp:100,sp:236,m:1.2}];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -153,12 +202,13 @@ function onLobby(l,local){A.lastL=performance.now();A.hostId=l.h;A.players=l.p;
 }
 function renderLobby(){
   $('lcode').textContent=A.code;const box=$('teams');box.textContent='';
-  for(let t=0;t<3;t++){const d=document.createElement('div');d.className='team';d.style.borderColor=TC[t];
-    const h=document.createElement('h3');h.textContent='الفريق '+TN[t];h.style.color=TC[t];d.append(h);
+  for(let t=0;t<3;t++){const d=document.createElement('div');d.className='team';d.style.setProperty('--tc',TC[t]);
+    const h=document.createElement('h3');h.textContent='الفريق '+TN[t];d.append(h);
     const g=document.createElement('div');g.className='slots';
-    for(const r of [0,1]){const p=A.players.find(x=>x.t===t&&x.r===r);const b=document.createElement('button');b.className='slot'+(p&&p.id===pid?' me':'');
-      const s=document.createElement('small');s.textContent=(r?'':'♛ ')+RN[r];b.append(s,document.createTextNode(p?p.n:'فاضي'));
-      b.onclick=()=>{if(A.host)setSlot(pid,t,r);else send(A.inCh,'i',{sl:[t,r]})};g.append(b)}
+    for(const r of [0,1]){const p=A.players.find(x=>x.t===t&&x.r===r);const b=document.createElement('button');b.className='slot'+(p?' full':'')+(p&&p.id===pid?' me':'');
+      const ic=document.createElement('span');ic.className='ic';ic.textContent=r?'⚔':'♛';
+      const tx=document.createElement('span');tx.className='tx';const n=document.createElement('b');n.textContent=p?p.n:'فاضي';const s=document.createElement('small');s.textContent=RN[r];tx.append(n,s);
+      b.append(ic,tx);b.onclick=()=>{if(A.host)setSlot(pid,t,r);else send(A.inCh,'i',{sl:[t,r]})};g.append(b)}
     d.append(g);box.append(d)}
   const st=$('start');st.style.display=A.host?'':'none';
   const kt=new Set(A.players.filter(p=>p.r===0&&p.t>=0).map(p=>p.t));st.disabled=kt.size<2;
@@ -176,18 +226,18 @@ function angDiff(a,b){let d=(a-b)%(Math.PI*2);if(d>Math.PI)d-=Math.PI*2;if(d<-Ma
 function ev(o){G.evNet.push(o);G.evNow.push(o)}
 function newGame(){
   const roster=A.players.filter(p=>p.t>=0).map(p=>({...p}));A.players=roster;
-  G={roster,e:roster.map(()=>({})),cr:[0,0,0],rn:0,ph:'ready',T:3,tm:0,z:640,pk:[],pj:[],evNet:[],evNow:[],kills:roster.map(()=>0),vs:{},win:-1,tick:0};
+  G={roster,e:roster.map(()=>({})),cr:[0,0,0],rn:0,ph:'ready',T:3,tm:0,z:900,pk:[],pj:[],evNet:[],evNow:[],kills:roster.map(()=>0),vs:{},win:-1,tick:0};
   startRound();
 }
 function teamsActive(){return [...new Set(G.roster.filter((p,i)=>!G.e[i].gone).map(p=>p.t))]}
 function startRound(){
-  G.rn++;G.ph='ready';G.T=3;G.tm=0;G.z=640;G.pj=[];G.win=-1;G.rare=false;
+  G.rn++;G.ph='ready';G.T=3;G.tm=0;G.z=900;G.pj=[];G.win=-1;G.rare=false;
   for(const t of [0,1,2]){const k=G.roster.findIndex((p,i)=>p.t===t&&p.r===0);const f=G.roster.findIndex((p,i)=>p.t===t&&p.r===1);
     if(k>=0&&G.e[k].gone&&f>=0&&!G.e[f].gone){G.roster[k].r=1;G.roster[f].r=0}}
   G.roster.forEach((p,i)=>{const o=G.e[i],s=STAT[p.r],sp=SPAWN[p.t][p.r];
     G.e[i]={x:sp[0],y:sp[1],vx:0,vy:0,a:p.t===0?0:p.t===1?Math.PI:-Math.PI/2,hp:s.hp,alive:!o.gone,wp:0,cd:0,dashT:0,dashCd:0,stun:0,blk:0,blkAt:0,rr:0,pick:0,mx:0,my:0,dx:1,dy:0,q:o.q,h:o.h,d:o.d,gone:o.gone,pend:null}});
-  G.pk=[[346,204,rnd()],[614,204,rnd()],[480,62,rnd()],[190,400,rnd()],[770,400,rnd()],[60,330,5],[900,330,5]].map(a=>({x:a[0],y:a[1],ty:a[2],base:a[2],cd:0}));
-  $('help').style.opacity=G.rn>1?0:1;
+  G.pk=[[490,290,rnd()],[870,290,rnd()],[680,89,rnd()],[269,567,rnd()],[1091,567,rnd()],[85,468,5],[1275,468,5]].map(a=>({x:a[0],y:a[1],ty:a[2],base:a[2],cd:0}));
+  
 }
 function rnd(){return 1+Math.floor(Math.random()*3)}
 function goneEnt(i){const e=G.e[i];e.gone=true;if(e.alive)die(i,-1)}
@@ -224,7 +274,7 @@ function step(dt){if(!G)return;
 }
 function finish(){G.ph='over';G.T=0;let b=0;for(let t=1;t<3;t++)if(G.cr[t]>G.cr[b])b=t;G.win=b;}
 function fight(dt){G.tm+=dt;
-  G.z=G.tm<25?640:Math.max(110,640-(G.tm-25)*(530/60));
+  G.z=G.tm<25?900:Math.max(110,900-(G.tm-25)*(790/60));
   if(G.tm>=25&&!G.rare){G.rare=true;G.pk.push({x:TX,y:TY,ty:4,base:4,cd:-1});ev({k:'r'})}
   G.e.forEach((e,i)=>{const p=G.roster[i],s=STAT[p.r];
     if(!e.alive){if(e.rr>0&&!e.gone){e.rr-=dt;if(e.rr<=0){const sp=SPAWN[p.t][1];Object.assign(e,{alive:true,hp:s.hp,x:sp[0],y:sp[1],rr:0,wp:0,vx:0,vy:0,stun:0})}}return}
@@ -265,7 +315,7 @@ const inp={x:0,y:0,a:0,b:0,q:0,h:0,d:0};
 function curInput(){return{x:+inp.x.toFixed(2),y:+inp.y.toFixed(2),a:+inp.a.toFixed(2),b:inp.b,q:inp.q,h:inp.h,d:inp.d}}
 function myIdx(){return A.players.findIndex(p=>p.id===pid)}
 function resetGameView(){V.cur=V.prev=null;V.fx=[];V.me=null;V.lastPh='';$('over').classList.remove('on');$('feed').textContent='';if(A.host)G=null}
-function startView(){show('game');resize();$('over').classList.remove('on')}
+function startView(){show('game');resize();$('over').classList.remove('on');$('help').style.opacity=1;setTimeout(()=>$('help').style.opacity=0,9000)}
 function onSnap(s,local){if(!A.host&&local===true)return;if(A.ph!=='game'&&!local){return}
   V.prev=V.cur||s;V.cur=s;V.at=performance.now();
   for(const e of s.ev||[])handleEv(e);
@@ -281,43 +331,41 @@ function addFeed(e){const d=document.createElement('div');
   if(e.rare)d.textContent='مطرقة العرش نزلت بالنص!';else{const v=A.players[e.v];d.textContent=(e.a>=0?name(e.a)+' قتل ':'الحلقة قتلت ')+((v&&v.r===0)?'الملك ':'')+name(e.v)}
   $('feed').prepend(d);setTimeout(()=>d.remove(),4500)}
 function renderHud(s){
-  const key=s.cr.join()+s.tm+s.ph;if(V.hk!==key){V.hk=key;const h=$('hud');h.textContent='';
-    new Set(A.players.map(p=>p.t)).forEach(t=>{const d=document.createElement('div');d.className='ht';d.style.color=TC[t];d.textContent=TN[t]+' '+'♛'.repeat(s.cr[t])+'·'.repeat(3-s.cr[t]);h.append(d)});
-    const c=document.createElement('div');c.className='ht';c.textContent='جولة '+s.rn+' · '+s.tm+'ث';h.append(c)}
-  let b='';if(s.ph==='ready')b=s.T>2?'جولة '+s.rn:Math.ceil(s.T)+'';else if(s.ph==='end')b=s.win>=0?'التاج للفريق '+TN[s.win]:'تعادل! ماكو تاج';
-  if($('banner').textContent!==b)$('banner').textContent=b;
-  if(s.ph==='over'&&!$('over').classList.contains('on')){showOver(s)}
+  let b='';if(s.ph==='ready')b=s.T>2?'الجولة '+s.rn:String(Math.ceil(s.T));else if(s.ph==='end')b=s.win>=0?'التاج للفريق '+TN[s.win]:'تعادل! ماكو تاج';
+  const el=$('banner');if(el.textContent!==b){el.textContent=b;el.classList.remove('pop');void el.offsetWidth;if(b)el.classList.add('pop')}
+  if(s.ph==='over'&&!$('over').classList.contains('on'))showOver(s)
 }
-function showOver(s){$('over').classList.add('on');$('otitle').textContent='فاز الفريق '+TN[s.win];$('otitle').style.color=TC[s.win];
-  const st=$('stats');st.textContent='';if(s.st){const lines=[];A.players.forEach((p,i)=>lines.push(p.n+': '+s.st.k[i]+' قتلات'));
-    const top=Object.entries(s.st.v).sort((a,b)=>b[1]-a[1])[0];if(top){const [a,v]=top[0].split('>');lines.push('أكبر عداوة: '+name(+a)+' قتل '+name(+v)+' '+top[1]+' مرات')}
-    lines.forEach(l=>{const d=document.createElement('div');d.textContent=l;st.append(d)})}
+function showOver(s){if(document.exitPointerLock)document.exitPointerLock();$('over').classList.add('on');$('otitle').textContent='فاز '+TN[s.win];
+  const st=$('stats');st.textContent='';if(s.st){const rows=A.players.map((p,i)=>({n:p.n,k:s.st.k[i]})).sort((a,b)=>b.k-a.k);
+    rows.forEach((r,i)=>{const d=document.createElement('div');d.className='sr'+(i===0&&r.k>0?' mvp':'');const a=document.createElement('span');a.textContent=(i===0&&r.k>0?'♛ ':'')+r.n;const c=document.createElement('span');c.textContent=r.k+' قتلات';d.append(a,c);st.append(d)});
+    const top=Object.entries(s.st.v).sort((a,b)=>b[1]-a[1])[0];if(top){const [a,v]=top[0].split('>');const d=document.createElement('div');d.className='rv';d.textContent='أكبر عداوة: '+name(+a)+' قتل '+name(+v)+' '+top[1]+' مرات';st.append(d)}}
   $('again').style.display=A.host?'':'none'}
 
 /* ---------- input ---------- */
 const keys={};let pressAt=0,charging=false,touchMode=matchMedia('(pointer:coarse)').matches;
 if(touchMode)$('game').classList.add('touch');
-function readKeys(){if(touchMode)return;let x=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),y=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);const l=Math.hypot(x,y);inp.x=l?x/l:0;inp.y=l?y/l:0;inp.b=keys.ShiftLeft||keys.ShiftRight?1:0}
+const joy={x:0,y:0};
+function readKeys(){let sx,sy;if(touchMode){sx=joy.x;sy=joy.y}else{sx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);sy=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);const l=Math.hypot(sx,sy);if(l){sx/=l;sy/=l}inp.b=keys.ShiftLeft||keys.ShiftRight||inp.mb?1:0}
+  const f=-sy,r=sx,c=Math.cos(inp.a),s=Math.sin(inp.a);inp.x=c*f-s*r;inp.y=s*f+c*r}
 addEventListener('keydown',e=>{if(!$('game').classList.contains('on'))return;if(!keys[e.code]&&e.code==='Space')doDash();keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 function doDash(){inp.d++;if(V.dashCd<=0){V.dashT=.17;V.dashCd=1.3}pushInput(true)}
 function pressAtk(){pressAt=performance.now();charging=true}
-function releaseAtk(){if(!charging)return;charging=false;if(performance.now()-pressAt>=450)inp.h++;else inp.q++;pushInput(true)}
+function releaseAtk(){if(!charging)return;charging=false;if(window.R3&&R3.assist)R3.assist();if(performance.now()-pressAt>=450)inp.h++;else inp.q++;pushInput(true)}
 const cv=$('c');
 function resize(){if(window.R3)window.R3.resize()}
 
 let mouse={x:0,y:0};
-cv.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
-cv.addEventListener('mousedown',e=>{if(e.button===0)pressAtk();else if(e.button===2)inp.bm=1});
-addEventListener('mouseup',e=>{if(e.button===0)releaseAtk()});
+cv.addEventListener('mousedown',e=>{if(!touchMode&&$('game').classList.contains('on')&&document.pointerLockElement!==cv){if(cv.requestPointerLock)cv.requestPointerLock();return}if(e.button===0)pressAtk();else if(e.button===2)inp.mb=1});
+addEventListener('mouseup',e=>{if(e.button===0)releaseAtk();else if(e.button===2)inp.mb=0});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 function bindBtn(id,dn,up){const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();dn()},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();up&&up()},{passive:false})}
 bindBtn('bA',pressAtk,releaseAtk);bindBtn('bB',()=>inp.b=1,()=>inp.b=0);bindBtn('bD',doDash);
-(()=>{const st=$('stick'),kn=$('knob');let tid=null;function mv(t){const r=st.getBoundingClientRect();let x=(t.clientX-r.left-65)/50,y=(t.clientY-r.top-65)/50;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}inp.x=x;inp.y=y;kn.style.transform=`translate(${x*40}px,${y*40}px)`}
+(()=>{const st=$('stick'),kn=$('knob');let tid=null;function mv(t){const r=st.getBoundingClientRect();let x=(t.clientX-r.left-65)/50,y=(t.clientY-r.top-65)/50;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}joy.x=x;joy.y=y;kn.style.transform=`translate(${x*40}px,${y*40}px)`}
 st.addEventListener('touchstart',e=>{e.preventDefault();tid=e.changedTouches[0].identifier;mv(e.changedTouches[0])},{passive:false});
 st.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===tid)mv(t)},{passive:false});
-const end=e=>{for(const t of e.changedTouches)if(t.identifier===tid){tid=null;inp.x=inp.y=0;kn.style.transform=''}};st.addEventListener('touchend',end);st.addEventListener('touchcancel',end)})();
+const end=e=>{for(const t of e.changedTouches)if(t.identifier===tid){tid=null;joy.x=joy.y=0;kn.style.transform=''}};st.addEventListener('touchend',end);st.addEventListener('touchcancel',end)})();
 let lastSend=0,lastJson='';
 function pushInput(force){if(A.host||!A.inCh||A.ph!=='game')return;const n=performance.now();if(!force&&n-lastSend<200)return;const c=curInput(),j=JSON.stringify(c);if(j===lastJson)return;lastJson=j;lastSend=n;send(A.inCh,'i',{in:c})}
 window.__inp=inp;
