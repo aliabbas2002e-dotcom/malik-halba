@@ -10,7 +10,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 const canvas = document.getElementById('c');
 const isTouch = matchMedia('(pointer:coarse)').matches;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isTouch ? 1.25 : 1.75));
+const basePR = Math.min(devicePixelRatio || 1, isTouch ? 1.1 : 1.5);
+renderer.setPixelRatio(basePR);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
@@ -30,7 +31,7 @@ const sun = new THREE.DirectionalLight('#ffc48a', 2.15);
 sun.position.set(-12, 18, 9);
 sun.castShadow = true;
 sun.shadow.mapSize.set(isTouch ? 1024 : 2048, isTouch ? 1024 : 2048);
-Object.assign(sun.shadow.camera, { left: -26, right: 26, top: 20, bottom: -20, near: 1, far: 80 });
+Object.assign(sun.shadow.camera, { left: -23, right: 23, top: 17, bottom: -17, near: 1, far: 70 });
 sun.shadow.bias = -.0006;
 sun.shadow.normalBias = .03;
 scene.add(sun);
@@ -90,7 +91,7 @@ const HOLD = [-.45, -1, -1.2, -1.57, -1];
 
 MODEL.arena.traverse(o => {
   if (!o.isMesh) return;
-  o.receiveShadow = true; o.castShadow = !/^b_(sand|under|base)/.test(o.name);
+  const far = /^f_/.test(o.name); o.receiveShadow = !far; o.castShadow = !far && !/^b_(sand|under|base)/.test(o.name);
   const n = o.material.name || '';
   if (n === 'stone0') o.material.color.set('#f0e4d4');
   else if (n === 'stone1') o.material.color.set('#c9bcae');
@@ -114,7 +115,7 @@ function glow(color, size) {
 }
 const TORCH = [[-17.05, 10.8], [17.05, 10.8], [-17.05, -10.8], [17.05, -10.8], [-7.5, -10.85], [7.5, -10.85], [-7.5, 10.85], [7.5, 10.85]];
 const torches = TORCH.map(([x, z]) => { const s = glow('#ff8a2a', 3.4); s.position.set(x, 3.6, z); scene.add(s); return s; });
-const tLights = (isTouch ? [TORCH[4], TORCH[7]] : [TORCH[0], TORCH[1], TORCH[4], TORCH[5], TORCH[6], TORCH[7]]).map(([x, z]) => {
+const tLights = (isTouch ? [TORCH[4], TORCH[7]] : [TORCH[4], TORCH[5], TORCH[6], TORCH[7]]).map(([x, z]) => {
   const l = new THREE.PointLight('#ff9140', 44, 19, 1.7); l.position.set(x * .97, 3.3, z * .96); scene.add(l); return l;
 });
 
@@ -148,7 +149,7 @@ await (async function world() {
 
   const seats = await (await fetch('assets/seats.json')).json();
   const pts = isTouch ? seats.filter((_, i) => i % 3 === 0) : seats;
-  const bodyG = new THREE.CapsuleGeometry(.23, .34, 3, 8), headG = new THREE.SphereGeometry(.19, 10, 8);
+  const bodyG = new THREE.CapsuleGeometry(.23, .34, 2, 6), headG = new THREE.SphereGeometry(.19, 7, 5);
   const pal = ['#8b7cf6', '#2fc79c', '#f0784a', '#d8c6a4', '#7c6a58', '#b34a4a', '#4e6f9c', '#e0b050'].map(c => new THREE.Color(c));
   const skin = ['#e8b48c', '#c98f64', '#a06f4c'].map(c => new THREE.Color(c));
   const mk = col => {
@@ -519,12 +520,27 @@ function menuFrame(now, dt) {
 }
 zoneGround.visible = zoneWall.visible = false;
 
+V.hist = []; V.rtt = 220; V.errX = V.errY = 0;
+function pastPos(t) { for (let i = V.hist.length - 1; i >= 0; i--) if (V.hist[i].t <= t) return V.hist[i]; return V.hist[0] || null; }
+
+let qLv = 0, qN = 0, qT = 0, qTick = 0;
+const PRS = [basePR, Math.min(basePR, 1.15), .9, .75];
+function watchFps(raw) {
+  if (raw > 400) { qN = qT = 0; return; }
+  qN++; qT += raw;
+  if (qT < 1500) return;
+  const fps = qN * 1000 / qT; R3.fps = Math.round(fps); qN = qT = 0;
+  if (fps < 50 && qLv < 3) { qLv++; composer = null; renderer.setPixelRatio(PRS[qLv]); fit(); R3.q = qLv; if (qLv >= 2) renderer.shadowMap.autoUpdate = false; }
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
+  watchFps(now - last);
+  if (qLv >= 2 && (qTick++ & 1)) renderer.shadowMap.needsUpdate = true;
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   if (!gameEl.classList.contains('on') || !V.cur) { menuFrame(now, dt); return; }
   if (wasMenu) { wasMenu = false; showcase(false, now); camPos.set(0, 17, 15); camLook.set(0, 0, 0); HR.key = ''; }
-  const s = V.cur, p = V.prev, k = A.host ? 1 : Math.max(0, Math.min(1, (now - V.at) / 125)), idx = myIdx();
+  const s = V.cur, p = V.prev, k = Math.max(0, Math.min(1, (now - V.at) / (A.host ? 34 : 125))), idx = myIdx();
   if (idx >= 0 && s.e[idx] && s.ph === 'ready') inp.a = s.e[idx][2] / 100;
   readKeys();
   const ents = s.e.map((e, i) => { const o = (p.e && p.e[i]) || e; return { x: lerp(o[0], e[0], k), y: lerp(o[1], e[1], k), a: lerpA(o[2] / 100, e[2] / 100, k), hp: e[3], f: e[4], w: e[5], rr: e[6], r: e[7] }; });
@@ -540,8 +556,18 @@ function frame(now) {
       let mx = inp.x, my = inp.y;
       if (V.dashT > 0 && Math.hypot(mx, my) < .1) { mx = Math.cos(inp.a); my = Math.sin(inp.a); }
       V.me.x += mx * sp * dt; V.me.y += my * sp * dt; collide(V.me);
-      const ex = sv[0] - V.me.x, ey = sv[1] - V.me.y;
-      if (Math.hypot(ex, ey) > 130) { V.me.x = sv[0]; V.me.y = sv[1]; } else { const c = Math.min(1, dt * 5); V.me.x += ex * c; V.me.y += ey * c; }
+      if (V.seen !== V.at) {
+        V.seen = V.at;
+        if (sv[8] && sv[8] !== V.ackT) { V.ackT = sv[8]; V.rtt += (Math.max(40, Math.min(700, now - sv[8])) - V.rtt) * .25; }
+        const past = pastPos(now - V.rtt);
+        V.errX = past ? sv[0] - past.x : 0; V.errY = past ? sv[1] - past.y : 0;
+        if (Math.hypot(V.errX, V.errY) > 130) { V.me.x = sv[0]; V.me.y = sv[1]; V.hist = []; V.errX = V.errY = 0; }
+        else if (Math.hypot(V.errX, V.errY) < 8) V.errX = V.errY = 0;
+      }
+      const c = Math.min(1, dt * 6), fx = V.errX * c, fy = V.errY * c;
+      V.me.x += fx; V.me.y += fy; V.errX -= fx; V.errY -= fy;
+      for (const h of V.hist) { h.x += fx; h.y += fy; }
+      V.hist.push({ t: now, x: V.me.x, y: V.me.y }); if (V.hist.length > 100) V.hist.shift();
       me.x = V.me.x; me.y = V.me.y;
     } else if (!A.host) V.me = { x: me.x, y: me.y };
     V.dashCd = Math.max(0, V.dashCd - dt);
@@ -557,7 +583,7 @@ function frame(now) {
     const a = inp.a, c = Math.cos(a), sn = Math.sin(a), mx = px2x(me.x), mz = px2z(me.y), rx = -sn, rz = c, D = 8.2, H = 4.5 + look.pitch * 5.2, SH = 1.55;
     wantPos.set(clampN(mx - c * D + rx * SH, -16.5, 16.5), H, clampN(mz - sn * D + rz * SH, -10.55, 10.55));
     wantLook.set(mx + c * 11 + rx * SH, 2.3 - look.pitch * 11, mz + sn * 11 + rz * SH);
-    camPos.lerp(wantPos, Math.min(1, dt * 16)); camLook.lerp(wantLook, Math.min(1, dt * 26));
+    camPos.lerp(wantPos, Math.min(1, dt * 30)); camLook.lerp(wantLook, Math.min(1, dt * 45));
   } else {
     wantPos.set(0, 15.5, 13.5); wantLook.set(0, 0, -.5);
     camPos.lerp(wantPos, Math.min(1, dt * 2.2)); camLook.lerp(wantLook, Math.min(1, dt * 3));
@@ -597,5 +623,7 @@ function frame(now) {
   updateHud(s, ents, idx);
   draw();
 }
+zoneGround.visible = zoneWall.visible = true; renderer.compile(scene, camera); zoneGround.visible = zoneWall.visible = false;
+R3.info = renderer.info;
 requestAnimationFrame(frame);
 window.__r3ready = true;

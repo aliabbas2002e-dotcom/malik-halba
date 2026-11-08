@@ -191,7 +191,7 @@ function onPresence(st){
 function onGuest(id,m){if(!m)return;
   if(m.j!==undefined){addPlayer(id,m.j);return}
   if(m.sl){setSlot(id,m.sl[0],m.sl[1]);return}
-  if(m.in&&G){const i=G.roster.findIndex(p=>p.id===id);if(i>=0)applyInput(i,m.in)}
+  if(m.in&&G){const i=G.roster.findIndex(p=>p.id===id);if(i>=0){applyInput(i,m.in);G.e[i].ts=m.in.t}}
 }
 function setSlot(id,t,r){if(A.ph!=='lobby'&&A.ph!=='home')return;if(![0,1,2].includes(t)||![0,1].includes(r))return;if(A.players.find(p=>p.t===t&&p.r===r))return;const p=A.players.find(x=>x.id===id);if(p){p.t=t;p.r=r;broadcastLobby()}}
 function broadcastLobby(){if(A.ph==='home')A.ph='lobby';const l={ph:A.ph,h:pid,p:A.players};send(A.stateCh,'l',l);onLobby(l,true)}
@@ -297,7 +297,7 @@ function fight(dt){G.tm+=dt;
   if(kings.length<=1){G.ph='end';G.T=4;G.win=kings.length?kings[0]:-1;if(G.win>=0)G.cr[G.win]++}
 }
 function snapshot(evs){return{ph:G.ph,T:+G.T.toFixed(1),tm:G.tm|0,z:G.z|0,rn:G.rn,cr:G.cr,win:G.win,
-  e:G.e.map((e,i)=>[e.x|0,e.y|0,Math.round(e.a*100),Math.ceil(e.hp),(e.alive?1:0)|(e.blk?2:0)|(e.dashT>0?4:0)|(e.stun>0?8:0),e.wp,Math.ceil(e.rr),G.roster[i].r]),
+  e:G.e.map((e,i)=>[e.x|0,e.y|0,Math.round(e.a*100),Math.ceil(e.hp),(e.alive?1:0)|(e.blk?2:0)|(e.dashT>0?4:0)|(e.stun>0?8:0),e.wp,Math.ceil(e.rr),G.roster[i].r,e.ts||0]),
   pj:G.pj.map(b=>[b.x|0,b.y|0,Math.round(Math.atan2(b.vy,b.vx)*100)]),
   pk:G.pk.filter(k=>k.ty>0).map(k=>[k.x,k.y,k.ty]),ev:evs,
   st:G.ph==='over'?{k:G.kills,v:G.vs}:undefined}}
@@ -314,12 +314,12 @@ const V={cur:null,prev:null,at:0,fx:[],shake:0,me:null,dashT:0,dashCd:0,lastPh:'
 const inp={x:0,y:0,a:0,b:0,q:0,h:0,d:0};
 function curInput(){return{x:+inp.x.toFixed(2),y:+inp.y.toFixed(2),a:+inp.a.toFixed(2),b:inp.b,q:inp.q,h:inp.h,d:inp.d}}
 function myIdx(){return A.players.findIndex(p=>p.id===pid)}
-function resetGameView(){V.cur=V.prev=null;V.fx=[];V.me=null;V.lastPh='';$('over').classList.remove('on');$('feed').textContent='';if(A.host)G=null}
+function resetGameView(){V.cur=V.prev=null;V.fx=[];V.me=null;V.hist=[];V.lastPh='';$('over').classList.remove('on');$('feed').textContent='';if(A.host)G=null}
 function startView(){show('game');resize();$('over').classList.remove('on');$('help').style.opacity=1;setTimeout(()=>$('help').style.opacity=0,9000)}
 function onSnap(s,local){if(!A.host&&local===true)return;if(A.ph!=='game'&&!local){return}
   V.prev=V.cur||s;V.cur=s;V.at=performance.now();
   for(const e of s.ev||[])handleEv(e);
-  if(s.rn!==V.rn||s.ph==='ready'&&V.lastPh!=='ready'){V.me=null;V.rn=s.rn}
+  if(s.rn!==V.rn||s.ph==='ready'&&V.lastPh!=='ready'){V.me=null;V.hist=[];V.rn=s.rn}
   renderHud(s);V.lastPh=s.ph}
 function name(i){return (A.players[i]||{}).n||'؟'}
 function handleEv(e){
@@ -357,7 +357,7 @@ const cv=$('c');
 function resize(){if(window.R3)window.R3.resize()}
 
 let mouse={x:0,y:0};
-cv.addEventListener('mousedown',e=>{if(!touchMode&&$('game').classList.contains('on')&&document.pointerLockElement!==cv){if(cv.requestPointerLock)cv.requestPointerLock();return}if(e.button===0)pressAtk();else if(e.button===2)inp.mb=1});
+cv.addEventListener('mousedown',e=>{if(!touchMode&&$('game').classList.contains('on')&&document.pointerLockElement!==cv&&!window.noLock){const lk=cv.requestPointerLock&&cv.requestPointerLock();if(lk&&lk.catch)lk.catch(()=>{window.noLock=1;$('lock').style.display='none'});return}if(e.button===0)pressAtk();else if(e.button===2)inp.mb=1});
 addEventListener('mouseup',e=>{if(e.button===0)releaseAtk();else if(e.button===2)inp.mb=0});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 function bindBtn(id,dn,up){const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();dn()},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();up&&up()},{passive:false})}
@@ -366,8 +366,8 @@ bindBtn('bA',pressAtk,releaseAtk);bindBtn('bB',()=>inp.b=1,()=>inp.b=0);bindBtn(
 st.addEventListener('touchstart',e=>{e.preventDefault();tid=e.changedTouches[0].identifier;mv(e.changedTouches[0])},{passive:false});
 st.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===tid)mv(t)},{passive:false});
 const end=e=>{for(const t of e.changedTouches)if(t.identifier===tid){tid=null;joy.x=joy.y=0;kn.style.transform=''}};st.addEventListener('touchend',end);st.addEventListener('touchcancel',end)})();
-let lastSend=0,lastJson='';
-function pushInput(force){if(A.host||!A.inCh||A.ph!=='game')return;const n=performance.now();if(!force&&n-lastSend<200)return;const c=curInput(),j=JSON.stringify(c);if(j===lastJson)return;lastJson=j;lastSend=n;send(A.inCh,'i',{in:c})}
+let lastSend=0,lastJson='',lastMove='';
+function pushInput(force){if(A.host||!A.inCh||A.ph!=='game')return;const n=performance.now(),c=curInput(),mv=[c.x,c.y,c.b].join();if(!force&&n-lastSend<(mv!==lastMove?50:200))return;const j=JSON.stringify(c);if(j===lastJson)return;lastJson=j;lastMove=mv;lastSend=n;c.t=Math.round(n);send(A.inCh,'i',{in:c})}
 window.__inp=inp;
 
 /* ---------- render ---------- */
